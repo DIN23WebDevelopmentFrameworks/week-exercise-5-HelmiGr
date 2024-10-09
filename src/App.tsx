@@ -1,19 +1,57 @@
+import React, { useState, useEffect } from 'react';
+import RecipeTagList from './RecipeTagList';
+import RecipeList from './RecipeList';
+
+const TAGS_API = 'https://dummyjson.com/recipes/tags';
+const RECIPES_API = (tag: string) => `https://dummyjson.com/recipes/tag/${tag}`;
 
 const App = () => {
 
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [recipes, setRecipes] = useState<IRecipe[]>([]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch(TAGS_API);
+        const data = await response.json();
+        setTags(data); 
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      } 
+    };
+    fetchTags();
+  }, []);
+
+  const handleTagSelect = async (tagName: string) => {
+    setSelectedTag(tagName);
+    try {
+      const response = await fetch(RECIPES_API(tagName));
+      const data = await response.json();
+      setRecipes(data.recipes); 
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    }
+  };
+
+  const handleBackToTags = () => {
+    setSelectedTag(null); 
+  };
 
   return (
     <div>
         <h1>ACME Recipe O'Master</h1>
-        <div>Remove this and implement recipe tag list here. </div>
-        <ul>
-        <li>On start the application displays a list of recipe tags such as 'pasta', 'cookies' etc. The tag information is loaded from an API (https://dummyjson.com/recipes/tags)</li>
-        <li> The user can click on a tag and the application will then hide the tag list and display a list of recipes matching the selected tag. The recipe information for the clicked tag is loaded from an API (https://dummyjson.com/recipes/tag/Pizza).</li>
-        <li> User can also go back to the tag list. </li>
-        <li> Each receipe is displayed as box where recipe data such as ingredients and instructions are displayed</li>
-        </ul>
+        
+        {!selectedTag ? (
+        <RecipeTagList tagList={tags} onSelectTag={handleTagSelect} />
+         ) : (
+        <RecipeList recipeData={recipes} onBack={handleBackToTags} />
+        )}
+
     </div>
   );
 };
 
 export default App;
+
